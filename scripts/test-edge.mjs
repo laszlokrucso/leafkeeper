@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+let handler;const calls=[];
+const env={SUPABASE_URL:'https://test.supabase.co',SUPABASE_PUBLISHABLE_KEYS:JSON.stringify({default:'mock-public'}),OPENPLANTBOOK_CLIENT_ID:'mock-client',OPENPLANTBOOK_CLIENT_SECRET:'mock-credential'};
+globalThis.Deno={env:{get:k=>env[k]},serve:fn=>{handler=fn}};
+globalThis.fetch=async(url,options={})=>{calls.push({url:String(url),options});if(String(url).endsWith('/auth/v1/user'))return Response.json({id:'test-user'});if(String(url).endsWith('/token/'))return Response.json({access_token:'mock-token',expires_in:3600});return Response.json({results:[{pid:'monstera deliciosa',display_pid:'Monstera deliciosa'}]});};
+await import('../supabase/functions/plant-search/index.ts');
+const request=(q='Monstera',headers={})=>new Request('https://test.supabase.co/functions/v1/plant-search?q='+q,{headers:{Origin:'https://laszlokrucso.github.io',...headers}});
+let r=await handler(new Request('https://test.supabase.co/functions/v1/plant-search',{method:'OPTIONS',headers:{Origin:'https://laszlokrucso.github.io'}}));assert.equal(r.status,204);assert.equal(r.headers.get('Access-Control-Allow-Origin'),'https://laszlokrucso.github.io');
+r=await handler(request());assert.equal(r.status,401);assert.equal(calls.length,0);
+r=await handler(request('Monstera',{Origin:'https://untrusted.example',Authorization:'Bearer test'}));assert.equal(r.status,403);assert.equal(r.headers.get('Access-Control-Allow-Origin'),null);
+r=await handler(request('Mo',{Authorization:'Bearer test'}));assert.equal(r.status,400);
+r=await handler(request('Monstera',{Authorization:'Bearer test'}));assert.equal(r.status,200);assert.equal((await r.json()).results[0].display_pid,'Monstera deliciosa');
+const tokenCall=calls.find(c=>c.url.endsWith('/token/'));assert.equal(tokenCall.options.body.get('scope'),'read');assert.match(tokenCall.options.headers['User-Agent'],/^LeafKeeper\//);
+assert.ok(calls.find(c=>c.url.includes('userplant=false')&&c.url.includes('limit=15')));
+await handler(request('Syngonium',{Authorization:'Bearer test'}));assert.equal(calls.filter(c=>c.url.endsWith('/token/')).length,1,'Provider token reused');
+const originalFetch=globalThis.fetch;globalThis.fetch=async()=>Response.json({error:'invalid JWT'},{status:401});r=await handler(request('Monstera',{Authorization:'Bearer invalid'}));assert.equal(r.status,401);globalThis.fetch=originalFetch;
+console.log('Edge function checks passed: CORS, authentication, query validation, public-only search, read scope and token caching.');

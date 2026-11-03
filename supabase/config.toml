@@ -1,0 +1,2 @@
+[functions.plant-search]
+verify_jwt = true
