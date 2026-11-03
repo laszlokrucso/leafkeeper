@@ -59,3 +59,6 @@ create policy lk_photo_insert on storage.objects for insert to authenticated wit
 drop policy if exists lk_photo_delete on storage.objects;
 create policy lk_photo_delete on storage.objects for delete to authenticated using(bucket_id='leafkeeper' and (storage.foldername(name))[1]=(select auth.uid())::text);
 commit;
+
+-- Optional stable species link; safe to apply to existing installations.
+alter table public.lk_plants add column if not exists openplantbook_pid text check (char_length(openplantbook_pid) between 1 and 100);

@@ -42,3 +42,13 @@ A bemutató stockfotói az Unsplash oldaláról származnak; nem a felhasználó
 - Esra Afşar: https://unsplash.com/photos/monstera-adansonii-plant-with-large-perforated-leaves-0O7NXDDENes
 - feey: https://unsplash.com/photos/a-hand-holding-a-potted-plant-with-green-leaves-p9iWL601vts
 - Hero: https://images.unsplash.com/photo-1501004318641-b39e6451bec6
+
+## OpenPlantbook fajismeret
+
+A növény adatlapján automatikusan betöltődnek a pontos tudományos névhez tartozó nyilvános fajadatok. Ha nincs pontos találat, szerkesztéskor a fajkeresőből választható ki a megfelelő rekord; annak azonosítója a növénnyel együtt mentődik. A kiválasztás után a szerkesztőben is látható az előnézet.
+
+Megjelenik az elérhető hőmérséklet, megvilágítás, páratartalom, származás, köznév/szinonimák, valamint az `include=care` kategória fény-, öntözés-, talaj-, tápoldatozás- és metszésleírása. A szöveg a szolgáltató nyelvén marad. A hiányzó értékek nem alakulnak nullává, a talajszenzor-adatok és a forrásfotó külön lenyithatók. Az EC és talajnedvesség nem adagolási javaslat. A gondozási tervet nem írja felül az adatbázis.
+
+A hitelesített `plant-search?pid=...` ugyanazt az OAuth read jogosultságot használja, mint a kereső. Csak nyilvános fajadatot ad vissza; a szolgáltatói fiók egyedi User Plant rekordjait elutasítja. A szerveren legfeljebb 100 nyilvános fajadatlap él 24 órás memóriagyorsítótárban. A képek hivatkozásként kerülnek lekérésre, nem saját fotóként mentődnek.
+
+Meglévő adatbázis frissítése: a `supabase/setup.sql` végén szereplő ismételhető `openplantbook_pid` oszlophozzáadás.

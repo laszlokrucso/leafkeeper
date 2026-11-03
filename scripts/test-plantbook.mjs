@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {formatRange} from '../src/lib/plantbook.ts';
+assert.equal(formatRange(null,undefined,'%'),null);
+assert.equal(formatRange(0,30,'°C'),'0–30 °C');
+assert.equal(formatRange(-5,10,'°C'),'-5–10 °C');
+assert.equal(formatRange(null,80,'%'),'legfeljebb 80 %');
+assert.equal(formatRange(15,null,'%'),'legalább 15 %');
+assert.equal(formatRange(80,20,'%'),null);
+assert.equal(formatRange(NaN,Infinity,'lux'),null);
+console.log('Species range checks passed: missing, one-sided, zero, negative and invalid values.');

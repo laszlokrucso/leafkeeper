@@ -14,4 +14,15 @@ const tokenCall=calls.find(c=>c.url.endsWith('/token/'));assert.equal(tokenCall.
 assert.ok(calls.find(c=>c.url.includes('userplant=false')&&c.url.includes('limit=15')));
 await handler(request('Syngonium',{Authorization:'Bearer test'}));assert.equal(calls.filter(c=>c.url.endsWith('/token/')).length,1,'Provider token reused');
 const originalFetch=globalThis.fetch;globalThis.fetch=async()=>Response.json({error:'invalid JWT'},{status:401});r=await handler(request('Monstera',{Authorization:'Bearer invalid'}));assert.equal(r.status,401);globalThis.fetch=originalFetch;
-console.log('Edge function checks passed: CORS, authentication, query validation, public-only search, read scope and token caching.');
+const detailRequest=pid=>new Request('https://test.supabase.co/functions/v1/plant-search?pid='+encodeURIComponent(pid),{headers:{Origin:'https://laszlokrucso.github.io',Authorization:'Bearer test'}});
+let providerResponse={pid:'monstera deliciosa',display_pid:'Monstera deliciosa',alias:null,origin:'Central America',min_temp:0,max_temp:30,min_env_humid:null,max_env_humid:80,min_soil_moist:10,max_soil_moist:300,min_soil_ec:2000,max_soil_ec:300,sunlight:'Bright indirect light',watering:'Allow the top layer to dry.',image_url:'javascript:alert(1)',private_field:'not exported'};
+let detailsCalls=0;
+globalThis.fetch=async(url,options)=>{if(String(url).includes('/plant/detail/')){detailsCalls++;const u=new URL(url);assert.equal(u.searchParams.get('include'),'care');assert.equal(u.searchParams.get('lang'),'hu');assert.match(u.pathname,/monstera%20deliciosa|missing|custom|quoted/);return String(url).includes('/missing/')?Response.json({}, {status:404}):Response.json(providerResponse)}return originalFetch(url,options)};
+r=await handler(detailRequest('monstera deliciosa'));assert.equal(r.status,200);const plant=(await r.json()).plant;
+assert.equal(plant.min_temp,0);assert.equal(plant.min_env_humid,null);assert.equal(plant.max_env_humid,80);assert.equal(plant.max_soil_moist,null);assert.equal(plant.min_soil_ec,null);assert.equal(plant.max_soil_ec,null);assert.equal(plant.watering,providerResponse.watering);assert.equal(plant.image_url,null);assert.equal(plant.private_field,undefined);
+r=await handler(detailRequest('monstera deliciosa'));assert.equal(r.status,200);assert.equal(detailsCalls,1,'Repeated public detail is cached');
+r=await handler(detailRequest('../token'));assert.equal(r.status,400);
+r=await handler(detailRequest('missing'));assert.equal(r.status,404);
+providerResponse={pid:'custom',user_plant:true,watering:'Private user plant'};r=await handler(detailRequest('custom'));assert.equal(r.status,404,'Provider account custom data never exposed');
+providerResponse={pid:'quoted',user:5};r=await handler(detailRequest('quoted'));assert.equal(r.status,404);
+console.log('Edge checks passed: CORS, auth, search, detail and care categories, missing/invalid bounds, safe image URLs, private data rejection, caching and path validation.');
