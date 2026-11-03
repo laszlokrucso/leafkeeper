@@ -16,3 +16,10 @@
 .knowledge-guidance{display:grid;gap:18px;margin:24px 0}.knowledge-guidance h3{font-size:14px;margin:0 0 7px}.knowledge-guidance p{white-space:pre-wrap;font-size:14px;line-height:1.75;margin:0;overflow-wrap:anywhere}
 .knowledge-sensors,.knowledge-reference{border-top:1px solid #e8ece4;padding:16px 0}.plant-knowledge summary{cursor:pointer;font-size:13px;font-weight:600}.knowledge-reference img{display:block;max-width:100%;max-height:280px;object-fit:contain;border-radius:10px;margin:16px 0}.knowledge-note{font-size:12px;line-height:1.7;color:#74806d;margin:20px 0 0}.form .plant-knowledge{margin:0;padding:18px}.form .knowledge-ranges dd{font-size:17px}
 @media(max-width:600px){.plant-knowledge{padding:20px 16px}.knowledge-ranges{grid-template-columns:1fr}.knowledge-ranges>div{display:flex;justify-content:space-between;align-items:center;gap:12px}.knowledge-ranges dd{margin:0;text-align:right;font-size:17px}}
+
+/* Personal greeting and plant facts */
+.page-heading h1{overflow-wrap:anywhere}
+.name-settings{margin:20px 0;padding:18px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.name-settings h3{margin:0;font-size:15px}.name-settings input{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;color:inherit;font:inherit}.name-settings .secondary{align-self:flex-start}.name-settings .field-hint{margin:0}
+.personal-tip{min-width:0;overflow:hidden}.personal-tip .tip-plant{display:block;margin:16px 0 0;font-size:12px;font-weight:600;color:#557144;overflow-wrap:anywhere}.personal-tip h3{margin-top:12px}.personal-tip p{white-space:pre-wrap;overflow-wrap:anywhere;max-width:none}.personal-tip>small{display:block;font-size:10px;line-height:1.7;color:#6f7d62;margin-top:14px}.tip-actions{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:14px}.tip-actions .text-link{font-size:11px;min-height:38px;text-align:left}.personal-tip .eyebrow{display:flex;align-items:center;gap:7px}
+@media(max-width:700px){.personal-tip>small{font-size:11px}.personal-tip .tip-plant{font-size:13px}.tip-actions .text-link{font-size:12px}.name-settings input{font-size:16px}}

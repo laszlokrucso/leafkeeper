@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict';
+import {createServer} from 'vite';
+import {createElement} from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+const server=await createServer({server:{middlewareMode:true},appType:'custom',optimizeDeps:{noDiscovery:true,include:[]}});
+try {
+  const {displayName,buildTips,daySeed}=await server.ssrLoadModule('/src/lib/personal.ts');
+  assert.equal(displayName('  Laci   Krucsó  '),'Laci Krucsó');
+  assert.equal(displayName({name:'Wrong'}),'');
+  assert.equal(displayName('x'.repeat(100)).length,40);
+  assert.equal(displayName('Laci\u0000'),'Laci');
+  assert.equal(daySeed('2026-11-03'),daySeed('2026-11-03'));
+  const plants=[{id:'mine',name:'Nappali Monstera',species:'Monstera deliciosa',status:'active'},{id:'archived',name:'Archivált',species:'Aloe',status:'archived'},{id:'unknown',name:'Ismeretlen',species:'Unknown',status:'active'},{id:'duplicate',name:'Második Monstera',species:'Monstera deliciosa',status:'active'}];
+  const facts={'monstera deliciosa':{pid:'monstera deliciosa',min_temp:0,max_temp:30,min_env_humid:null,max_env_humid:80,watering:'Allow the top layer to dry.'},aloe:{min_temp:10,max_temp:25},unowned:{origin:'Unowned fact'}};
+  const tips=buildTips(plants,facts);
+  assert.equal(tips.length,3);
+  assert.ok(tips.every(t=>t.plantId==='mine'),'Only existing non-archived collection plants included; duplicate species grouped');
+  assert.ok(tips.some(t=>t.text.includes('0–30 °C')),'Zero is a valid bound');
+  assert.ok(tips.some(t=>t.text.includes('legfeljebb 80 %')),'Missing bound never becomes zero');
+  assert.ok(!tips.some(t=>t.id.endsWith(':light')),'Missing data creates no invented tip');
+  assert.deepEqual(buildTips([],facts),[]);
+  assert.deepEqual(buildTips(plants,{}),[]);
+  const {default:NameSettings}=await server.ssrLoadModule('/src/DisplayNameSettings.tsx');
+  const html=renderToStaticMarkup(createElement(NameSettings,{userId:'test',value:'<script>name</script>',onSaved:()=>{}}));
+  assert.ok(html.includes('&lt;script&gt;name&lt;/script&gt;'));
+  assert.ok(html.includes('maxLength="40"'));
+  const {default:DailyTip}=await server.ssrLoadModule('/src/DailyTip.tsx');
+  const demo=renderToStaticMarkup(createElement(DailyTip,{plants:[],onOpen:()=>{}}));
+  assert.ok(demo.includes('TUDTAD?'));
+  assert.ok(demo.includes('Saját fiókkal'));
+  console.log('Personalization checks passed: name normalization, escaped output, owned plants only, archive/duplicate filtering and missing-data handling.');
+} finally {await server.close()}
