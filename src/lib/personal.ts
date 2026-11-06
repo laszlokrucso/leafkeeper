@@ -1,3 +1,4 @@
+import {t} from './i18n';
 import type {Plant} from './care';
 import {formatRange, type PlantbookDetails} from './plantbook';
 
@@ -20,14 +21,15 @@ export function buildTips(plants: Plant[], facts: Record<string, PlantbookDetail
     const temp = formatRange(d.min_temp,d.max_temp,'°C');
     const humidity = formatRange(d.min_env_humid,d.max_env_humid,'%');
     const light = formatRange(d.min_light_lux,d.max_light_lux,'lux');
-    if (temp) add('temp','Hőmérséklet', 'A faj adatbázisban megadott hőmérsékleti tartománya: '+temp+'. Érdemes ellenőrizni, milyen meleg van a növényed helyén.');
-    if (humidity) add('humidity','Páratartalom','A fajhoz megadott levegő-páratartalom: '+humidity+'. Egy páramérő segíthet megismerni a helyét.');
-    if (light) add('light','Fényigény','A fajhoz megadott megvilágítás: '+light+'. A helyi fényviszonyok az évszakkal is változnak.');
-    if (d.origin?.trim()) add('origin','Honnan származik?', 'Az OpenPlantbook szerinti származása: '+d.origin.trim()+'.');
-    for (const [field,title] of [['watering','Öntözés'],['soil','Talaj és közeg'],['sunlight','Fény'],['fertilization','Tápoldatozás'],['pruning','Metszés']] as const) {
+    if (temp) add('temp',t("Hőmérséklet"), t("A faj adatbázisban megadott hőmérsékleti tartománya: ")+temp+t(". Érdemes ellenőrizni, milyen meleg van a növényed helyén."));
+    if (humidity) add('humidity',t("Páratartalom"),t("A fajhoz megadott levegő-páratartalom: ")+humidity+t(". Egy páramérő segíthet megismerni a helyét."));
+    if (light) add('light',t("Fényigény"),t("A fajhoz megadott megvilágítás: ")+light+t(". A helyi fényviszonyok az évszakkal is változnak."));
+    if (d.origin?.trim()) add('origin',t("Honnan származik?"), t("Az OpenPlantbook szerinti származása: ")+d.origin.trim()+'.');
+    for (const [field,title] of [['watering','Öntözés'],['soil',t("Talaj és közeg")],['sunlight',t("Fény")],['fertilization',t("Tápoldatozás")],['pruning',t("Metszés")]] as const) {
       const value = d[field]?.trim();
       if (value) add(field,title,value.length > 400 ? value.slice(0,397)+'…' : value);
     }
   }
   return tips;
 }
+

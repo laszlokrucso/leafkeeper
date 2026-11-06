@@ -1,3 +1,5 @@
+import {t} from './lib/i18n';
+import {locale} from './lib/preferences';
 import {useEffect,useState} from 'react';
 import {ArrowRight,RefreshCw,Sun} from 'lucide-react';
 import {db,SUPABASE_KEY,SUPABASE_URL} from './lib/supabase';
@@ -9,7 +11,7 @@ const cache = new Map<string,{data:PlantbookDetails;until:number}>();
 export default function DailyTip({plants,userId,onOpen}:{plants:Plant[];userId?:string;onOpen:(p:Plant)=>void}) {
   const day=today();
   const signature=JSON.stringify(plants.filter(p=>p.status!=='archived'&&speciesKey(p)).map(p=>[p.id,p.name,p.species,p.openplantbook_pid]).sort((a,b)=>String(a[0]).localeCompare(String(b[0]))));
-  const key=(userId||'demo')+':'+day+':'+signature;
+  const key=locale()+':'+(userId||'demo')+':'+day+':'+signature;
   const [state,setState]=useState<{key:string;tips:PersonalTip[];error:boolean}>({key:'',tips:[],error:false});
   const [step,setStep]=useState(0),[attempt,setAttempt]=useState(0);
   useEffect(()=>{
@@ -47,5 +49,6 @@ export default function DailyTip({plants,userId,onOpen}:{plants:Plant[];userId?:
   const tips=loaded?state.tips:[];
   const tip=tips.length?tips[(daySeed(day)+step)%tips.length]:null;
   const plant=tip?plants.find(p=>p.id===tip.plantId):undefined;
-  return <div className="tip-card personal-tip"><span className="eyebrow"><Sun size={16}/> TUDTAD?</span>{tip&&plant?<><span className="tip-plant">{tip.plantName} · {tip.title}</span><h3>Egy érdekesség a növényedről.</h3><p aria-live="polite">{tip.text}</p><small>Forrás: OpenPlantbook · Általános fajadat{['watering','soil','sunlight','fertilization','pruning'].some(k=>tip.id.endsWith(':'+k))?' · Az adatforrás nyelvén':''}</small><div className="tip-actions"><button className="text-link" onClick={()=>onOpen(plant)}>Növény adatlapja <ArrowRight size={15}/></button>{tips.length>1&&<button className="text-link" onClick={()=>setStep(s=>s+1)}><RefreshCw size={14}/>Másik tipp</button>}</div></>:!userId?<><h3>Előbb egy érintés,<br/>aztán az öntözés.</h3><p>A naptár csak emlékeztet. Nézd meg a föld nedvességét, és a növényed igényei szerint dönts az öntözésről.</p><small>Saját fiókkal a saját növényeid fajadataiból kapsz itt érdekességeket.</small></>:!loaded?<p role="status">Érdekességet keresünk a növényeidhez…</p>:state.error?<><h3>Egy kis türelmet.</h3><p>A személyes fajtippeket most nem sikerült betölteni.</p><button className="text-link" onClick={()=>setAttempt(a=>a+1)}>Újrapróbálom <RefreshCw size={14}/></button></>:<><h3>Ismerjük meg a kertedet!</h3><p>{plants.some(p=>p.status!=='archived')?'A faj pontos kiválasztása után az elérhető fajadatokból mutatunk itt érdekességeket. A növény szerkesztésénél kereshetsz az OpenPlantbookban.':'Az első saját növényed és a faj megadása után itt hozzá kapcsolódó érdekességeket találsz.'}</p></>}</div>;
+  return <div className="tip-card personal-tip"><span className="eyebrow"><Sun size={16}/> {t("TUDTAD?")}</span>{tip&&plant?<><span className="tip-plant">{tip.plantName} · {t(tip.title)}</span><h3>{t("Egy érdekesség a növényedről.")}</h3><p aria-live="polite">{tip.text}</p><small>{t("Forrás: OpenPlantbook · Általános fajadat")}{['watering','soil','sunlight','fertilization','pruning'].some(k=>tip.id.endsWith(':'+k))?t(" · Az adatforrás nyelvén"):''}</small><div className="tip-actions"><button className="text-link" onClick={()=>onOpen(plant)}>{t("Növény adatlapja")} <ArrowRight size={15}/></button>{tips.length>1&&<button className="text-link" onClick={()=>setStep(s=>s+1)}><RefreshCw size={14}/>{t("Másik tipp")}</button>}</div></>:!userId?<><h3>{t("Előbb egy érintés,")}<br/>{t("aztán az öntözés.")}</h3><p>{t("A naptár csak emlékeztet. Nézd meg a föld nedvességét, és a növényed igényei szerint dönts az öntözésről.")}</p><small>{t("Saját fiókkal a saját növényeid fajadataiból kapsz itt érdekességeket.")}</small></>:!loaded?<p role="status">{t("Érdekességet keresünk a növényeidhez…")}</p>:state.error?<><h3>{t("Egy kis türelmet.")}</h3><p>{t("A személyes fajtippeket most nem sikerült betölteni.")}</p><button className="text-link" onClick={()=>setAttempt(a=>a+1)}>{t("Újrapróbálom")} <RefreshCw size={14}/></button></>:<><h3>{t("Ismerjük meg a kertedet!")}</h3><p>{plants.some(p=>p.status!=='archived')?t("A faj pontos kiválasztása után az elérhető fajadatokból mutatunk itt érdekességeket. A növény szerkesztésénél kereshetsz az OpenPlantbookban."):t("Az első saját növényed és a faj megadása után itt hozzá kapcsolódó érdekességeket találsz.")}</p></>}</div>;
 }
+

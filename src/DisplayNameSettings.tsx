@@ -1,3 +1,4 @@
+import {t} from './lib/i18n';
 import {useEffect,useState} from 'react';
 import {Check,Loader2} from 'lucide-react';
 import {db} from './lib/supabase';
@@ -11,12 +12,13 @@ export default function DisplayNameSettings({userId,value,onSaved}:{userId:strin
     const normalized=displayName(name);setPending(true);setError('');
     try {
       const {data:auth}=await db.auth.getSession();
-      if(auth.session?.user.id!==userId)throw Error('A munkamenet megváltozott. Jelentkezz be újra.');
+      if(auth.session?.user.id!==userId)throw Error(t("A munkamenet megváltozott. Jelentkezz be újra."));
       const {data,error}=await db.auth.updateUser({data:{display_name:normalized}});
       if(error)throw error;
       if(data.user.id===userId){setName(normalized);onSaved(normalized)}
-    } catch {setError('A nevet nem sikerült elmenteni. Ellenőrizd a kapcsolatot, majd próbáld újra.')}
+    } catch {setError(t("A nevet nem sikerült elmenteni. Ellenőrizd a kapcsolatot, majd próbáld újra."))}
     finally {setPending(false)}
   }
-  return <form className="form name-settings" onSubmit={save}><h3>Hogyan szólíthatunk?</h3><label>Felhasználói név<input autoComplete="nickname" maxLength={40} value={name} onChange={e=>setName(e.target.value)} placeholder="Írd be a választott neved" disabled={pending}/></label><p className="field-hint">Ezzel a névvel köszöntünk. Bármikor átírhatod; az üres mező visszaállítja az általános köszöntést.</p>{error&&<p className="form-error" role="alert">{error}</p>}<button className="secondary" disabled={pending||displayName(name)===value}>{pending?<Loader2 className="spin" size={16}/>:<Check size={16}/>}Név mentése</button></form>;
+  return <form className="form name-settings" onSubmit={save}><h3>{t("Hogyan szólíthatunk?")}</h3><label>{t("Felhasználói név")}<input autoComplete="nickname" maxLength={40} value={name} onChange={e=>setName(e.target.value)} placeholder={t("Írd be a választott neved")} disabled={pending}/></label><p className="field-hint">{t("Ezzel a névvel köszöntünk. Bármikor átírhatod; az üres mező visszaállítja az általános köszöntést.")}</p>{error&&<p className="form-error" role="alert">{error}</p>}<button className="secondary" disabled={pending||displayName(name)===value}>{pending?<Loader2 className="spin" size={16}/>:<Check size={16}/>}{t("Név mentése")}</button></form>;
 }
+

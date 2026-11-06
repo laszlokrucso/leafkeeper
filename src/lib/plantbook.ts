@@ -1,3 +1,5 @@
+import {t} from './i18n.ts';
+import {locale} from './preferences.ts';
 export const rangeKeys = ['temp', 'light_lux', 'env_humid', 'soil_moist', 'soil_ec'] as const;
 export const careKeys = ['sunlight', 'watering', 'soil', 'fertilization', 'pruning'] as const;
 export type PlantbookDetails = {
@@ -10,9 +12,10 @@ export type PlantbookDetails = {
 // Preserve zero and negative temperatures; never turn missing bounds into zero.
 export function formatRange(min: number | null | undefined, max: number | null | undefined, unit: string) {
   const valid = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n);
-  const fmt = (n: number) => n.toLocaleString('hu-HU');
+  const fmt = (n: number) => n.toLocaleString(locale());
   if (valid(min) && valid(max)) return min <= max ? `${fmt(min)}–${fmt(max)} ${unit}` : null;
-  if (valid(min)) return `legalább ${fmt(min)} ${unit}`;
-  if (valid(max)) return `legfeljebb ${fmt(max)} ${unit}`;
+  if (valid(min)) return t("legalább {0} {1}", fmt(min), unit);
+  if (valid(max)) return t("legfeljebb {0} {1}",fmt(max),unit);
   return null;
 }
+
