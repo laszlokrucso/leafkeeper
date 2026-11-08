@@ -22,7 +22,7 @@ begin
  if p_action='status' then return jsonb_build_object('saved',sid is not null);
  elsif p_action='get' then select decrypted_secret into value from vault.decrypted_secrets where id=sid;return jsonb_build_object('key',value);
  elsif p_action='set' then
-  if p_secret is null or p_secret !~ '^[A-Za-z0-9_-]{20,200}$' then raise exception 'invalid_key';end if;
+  if p_secret is null or p_secret !~ '^[A-Za-z0-9._-]{20,200}$' then raise exception 'invalid_key';end if;
   if sid is null then
    sid:=vault.create_secret(p_secret,'leafkeeper_gemini_'||p_owner::text,'LeafKeeper per-user Gemini credential');
    insert into leafkeeper_private.ai_keys(owner_id,vault_id) values(p_owner,sid);

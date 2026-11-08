@@ -28,7 +28,7 @@ Deno.serve(async(req:Request)=>{
   const bytes=new Uint8Array(size);let offset=0;for(const c of chunks){bytes.set(c,offset);offset+=c.length}
   let body:Record<string,unknown>;try{body=JSON.parse(new TextDecoder().decode(bytes));if(!body||typeof body!=='object'||Array.isArray(body))throw Error()}catch{throw new DoctorError('invalid_input')}
   if(req.method==='PUT'){
-   const key=typeof body.key==='string'?body.key.trim():'';if(!/^[A-Za-z0-9_-]{20,200}$/.test(key))throw new DoctorError('invalid_key');
+   const key=typeof body.key==='string'?body.key.trim():'';if(!/^[A-Za-z0-9._-]{20,200}$/.test(key))throw new DoctorError('invalid_key');
    const check=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+MODEL,{headers:{'x-goog-api-key':key},signal:AbortSignal.timeout(10000)});
    if(!check.ok)throw new DoctorError(check.status===429?'quota':check.status===404?'model_unavailable':'invalid_key',400);
    const info=await check.json();if(!info.supportedGenerationMethods?.includes('generateContent'))throw new DoctorError('model_unavailable',400);
