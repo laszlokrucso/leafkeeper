@@ -10,7 +10,7 @@
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "test": "node --experimental-strip-types scripts/test-care.mjs && node --experimental-strip-types scripts/test-edge.mjs && node --experimental-strip-types scripts/test-plantbook.mjs && node scripts/test-plantbook-ui.mjs && node scripts/test-personal.mjs && node --experimental-strip-types scripts/test-preferences.mjs",
+    "test": "node --experimental-strip-types scripts/test-care.mjs && node --experimental-strip-types scripts/test-edge.mjs && node --experimental-strip-types scripts/test-plantbook.mjs && node scripts/test-plantbook-ui.mjs && node scripts/test-personal.mjs && node --experimental-strip-types scripts/test-preferences.mjs && node --experimental-strip-types scripts/test-doctor.mjs && node scripts/test-doctor-ui.mjs",
     "verify:pages": "node scripts/check-pages.mjs"
   },
   "dependencies": {

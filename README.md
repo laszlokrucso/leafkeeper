@@ -52,3 +52,16 @@ Megjelenik az elérhető hőmérséklet, megvilágítás, páratartalom, szárma
 A hitelesített `plant-search?pid=...` ugyanazt az OAuth read jogosultságot használja, mint a kereső. Csak nyilvános fajadatot ad vissza; a szolgáltatói fiók egyedi User Plant rekordjait elutasítja. A szerveren legfeljebb 100 nyilvános fajadatlap él 24 órás memóriagyorsítótárban. A képek hivatkozásként kerülnek lekérésre, nem saját fotóként mentődnek.
 
 Meglévő adatbázis frissítése: a `supabase/setup.sql` végén szereplő ismételhető `openplantbook_pid` oszlophozzáadás.
+
+
+## AI növénydoki
+
+A növény adatlapjáról három előre definiált kategória indítható: állapotfelmérés, tünetek / gondozás, kártevőgyanú. Saját fiók és a Beállításokban ellenőrzött Gemini API-kulcs szükséges. A kulcs Supabase Vaultban titkosítva tárolódik; a böngésző nem kapja vissza. Törölhető és cserélhető.
+
+Új projektnél a `setup.sql` után futtasd az `supabase/ai-doctor.sql` fájlt, majd telepítsd az `supabase/functions/ai-doctor` Edge Functiont az `index.ts` belépési ponttal, `deno.json` import mappel és bekapcsolt JWT-ellenőrzéssel. A frontend telepítése nem frissíti automatikusan ezt a backendet. A privát RPC-k kizárólag service_role szerepkörrel hívhatók; a függvény külön ellenőrzi a bejelentkezést és a növény tulajdonosát.
+
+A kifejezett hozzájárulás után egy átméretezett, JPEG-re újrarajzolt kép (általában legfeljebb 1024 px, kártevőnél 1280 px), legfeljebb 400 karakteres tünetleírás, faj/cserép/közeg és az utolsó három gondozás típusa és dátuma kerül a Google-höz. Személyes jegyzetek és a teljes napló nem. A fotó nem kerül tárolásra az AI-funkcióban. A modell `gemini-3.5-flash-lite`, minimális gondolkodással, legfeljebb 1200 kimeneti tokennel és rövid strukturált válasszal. Ez felső korlát, nem garantált költség: a kép és a kontextus bemeneti tokeneket is használ.
+
+A saját API-keret terhelődik. Nincs automatikus újrapróbálkozás. Azonos kép, kérdés és kontextus 24 órán belül visszakaphatja a mentett eredményt új AI-hívás nélkül; az előzmény megnyitása sem hívja a modellt. A felület a szolgáltató eredeti tokenadatait mutatja. Felhasználónként legfeljebb 20 új elemzés indulhat 24 óránként, legfeljebb 3 percenként; egyidejű indítást is korlátozunk. Az eredmény a saját növény előzményeibe mentődik, a gondozási naplóba külön gombbal, ismétlésbiztosan kerülhet összefoglaló. A képalapú javaslat bizonytalan lehet, nem biztos diagnózis.
+
+A `npm test` a tényleges Edge handler külső szolgáltatásait helyettesítve ellenőrzi a kulcskezelést, hozzáférést, kép- és promptkorlátokat, gyorsítótárat, tokenadatokat és hibakezelést, fizetős Gemini-hívás nélkül.

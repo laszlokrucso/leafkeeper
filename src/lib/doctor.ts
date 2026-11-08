@@ -1,0 +1,20 @@
+import {db,SUPABASE_KEY,SUPABASE_URL} from './supabase';
+import {t} from './i18n';
+export type DoctorCategory='health'|'problem'|'pests';
+export type DoctorResult={summary:string;observations:string[];possible_causes:string[];next_steps:string[];follow_up:string};
+export type Analysis={id:string;plant_id:string;category:DoctorCategory;language:'hu'|'en';status:'pending'|'ready'|'failed';result:DoctorResult|null;usage:{input:number;output:number;thinking:number;total:number}|null;model:string;created_at:string;error_code?:string};
+export const doctorCategories:Record<DoctorCategory,string>={health:'Állapotfelmérés',problem:'Probléma vagy betegség',pests:'Kártevőgyanú'};
+export function doctorMessage(code:string){const messages:Record<string,string>={sign_in:'Az AI növénydoki használatához jelentkezz be.',invalid_input:'Ellenőrizd a megadott adatokat és az elemzési hozzájárulást.',invalid_image:'A kép nem megfelelő. Válassz egy jól látható növényfotót.',invalid_key:'A Gemini-kulcs nem érvényes, vagy nincs hozzáférése az elemzéshez.',model_unavailable:'Ez a Gemini-modell nem érhető el a kulcsoddal.',key_missing:'Először mentsd el a saját Gemini API-kulcsodat a Beállításokban.',quota:'A Google API-kereted elfogyott, vagy túl sok kérés érkezett. Ellenőrizd a Google AI Studio felületét.',rate_limit:'Túl sok kérés. Várj egy percet.',daily_limit:'Elérted a napi 20 új elemzéses korlátot. A mentett eredmények továbbra is megnyithatók.',busy:'Egy elemzésed még folyamatban van. Rövidesen frissítsd az előzményeket.',previous_failed:'Ez a kérés korábban nem fejeződött be. Ellenőrizd az előzményeket.',timeout:'Az elemzés nem érkezett meg időben. Előbb frissítsd az előzményeket; a Google már feldolgozhatta a kérést.',incomplete_result:'A modell nem adott teljes, feldolgozható választ. A kérés már használhatott API-keretet.',plant_missing:'A növény nem található a saját gyűjteményedben.',provider_failed:'A Gemini most nem tudta feldolgozni a kérést. Automatikusan nem próbáljuk újra.',storage_failed:'Az eredmény mentése nem sikerült. Előbb ellenőrizd az előzményeket.',unavailable:'Az AI növénydoki most nem érhető el. Próbáld később.'};return t(messages[code]||messages.unavailable);}
+export async function doctorApi(ownerId:string,method='GET',body?:unknown){
+ const {data}=await db.auth.getSession();if(!data.session||data.session.user.id!==ownerId)throw Error(doctorMessage('sign_in'));
+ let response:Response;try{response=await fetch(SUPABASE_URL+'/functions/v1/ai-doctor',{method,headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+data.session.access_token,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(90000)});}catch(e){throw Error(doctorMessage(e instanceof Error&&e.name==='TimeoutError'?'timeout':'unavailable'))}
+ let result;try{result=await response.json()}catch{throw Error(doctorMessage('unavailable'))}if(!response.ok)throw Error(doctorMessage(result.error));return result;
+}
+export async function prepareDoctorPhoto(file:File,category:DoctorCategory){
+ if(!['image/jpeg','image/png','image/webp','image/heic','image/heif'].includes(file.type)||file.size>20*1024*1024)throw Error(t('Legfeljebb 20 MB-os JPG, PNG, WebP vagy HEIC növényfotót válassz.'));
+ let image:ImageBitmap;try{image=await createImageBitmap(file)}catch{throw Error(t('Ezt a képet nem sikerült megnyitni. Próbáld JPG-formátumban.'))}
+ if(image.width<40||image.height<40){image.close();throw Error(t('Válassz nagyobb, részletesebb növényfotót.'))}
+ const max=category==='pests'?1280:1024,scale=Math.min(1,max/Math.max(image.width,image.height)),canvas=document.createElement('canvas');canvas.width=Math.round(image.width*scale);canvas.height=Math.round(image.height*scale);
+ const ctx=canvas.getContext('2d');if(!ctx){image.close();throw Error(t('Nem sikerült feldolgozni a képet.'))}ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(image,0,0,canvas.width,canvas.height);image.close();
+ const data=canvas.toDataURL('image/jpeg',.8);if(data.length>1800000)throw Error(t('A kép túl nagy. Vágd körbe a problémás részt, majd válaszd ki újra.'));return data;
+}

@@ -1,2 +1,6 @@
 [functions.plant-search]
 verify_jwt = true
+
+
+[functions.ai-doctor]
+verify_jwt = true
